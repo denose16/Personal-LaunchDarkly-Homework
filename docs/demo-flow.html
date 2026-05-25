@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Helix Bank · Demo Click-Path</title>
+<style>
+  :root {
+    --bg: #09090b;
+    --panel: #18181b;
+    --panel-2: #1f1f23;
+    --ink: #e4e4e7;
+    --ink-soft: #a1a1aa;
+    --ink-faint: #71717a;
+    --indigo: #818cf8;
+    --indigo-soft: #a5b4fc;
+    --emerald: #6ee7b7;
+    --amber: #fcd34d;
+    --rose: #fda4af;
+    --border: #27272a;
+    --ld-orange: #ff9e3d;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  header.title-block {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    color: var(--indigo);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+  }
+  .lede {
+    color: var(--ink-soft);
+    margin: 0;
+    font-size: 14px;
+  }
+  .meta {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .meta a {
+    color: var(--indigo-soft);
+    text-decoration: none;
+  }
+
+  .block-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--indigo);
+  }
+  .block-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .block-header .timing {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--indigo);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Conversation block (1 + 3) */
+  .conv-list {
+    margin: 0;
+    padding-left: 24px;
+  }
+  .conv-list li {
+    margin: 6px 0;
+    color: var(--ink-soft);
+  }
+  .conv-list li strong { color: var(--ink); }
+
+  /* Cluster — groups multiple steps that stay on one surface */
+  .cluster {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin: 18px 0;
+  }
+  .cluster-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cluster-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .cluster-timing {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--ink-faint);
+    font-size: 12px;
+  }
+  .cluster-purpose {
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin: 6px 0 14px;
+  }
+
+  /* Phase = a Helix-side run of steps OR an LD-side run of steps inside a cluster */
+  .phase {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+  .phase.helix {
+    background: rgba(129, 140, 248, 0.05);
+    border-left: 3px solid var(--indigo);
+  }
+  .phase.ld {
+    background: rgba(255, 158, 61, 0.04);
+    border-left: 3px solid var(--ld-orange);
+  }
+  .phase-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .phase-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .phase.helix .phase-tag {
+    background: rgba(129, 140, 248, 0.15);
+    color: var(--indigo-soft);
+    border: 1px solid rgba(129, 140, 248, 0.3);
+  }
+  .phase.ld .phase-tag {
+    background: rgba(255, 158, 61, 0.12);
+    color: var(--ld-orange);
+    border: 1px solid rgba(255, 158, 61, 0.3);
+  }
+  .phase-where {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .phase-where code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background: var(--panel-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+
+  /* Step inside a phase */
+  .step {
+    margin: 10px 0;
+    padding: 4px 0;
+  }
+  .step + .step {
+    border-top: 1px solid rgba(255,255,255,0.04);
+    padding-top: 12px;
+  }
+  .step-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .step-num {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--panel-2);
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-target {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  .step-target code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background: var(--panel-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--indigo-soft);
+    border: 1px solid var(--border);
+  }
+  .phase.ld .step-target code {
+    color: var(--ld-orange);
+  }
+  .step ol {
+    margin: 6px 0 0 26px;
+    padding: 0;
+  }
+  .step ol li {
+    margin: 3px 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .step ol li strong { color: var(--ink); }
+
+  .cluster.optional {
+    border-style: dashed;
+    background: transparent;
+    opacity: 0.85;
+  }
+  .cluster.optional .cluster-title::before {
+    content: "OPTIONAL · ";
+    color: var(--amber);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+
+  .legend {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 16px 0 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .legend .key {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .swatch.helix { background: var(--indigo); }
+  .swatch.ld    { background: var(--ld-orange); }
+  .small {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="title-block">
+  <p class="eyebrow">Demo click-path · 45 min · Helix Bank</p>
+  <h1>Demo Flow</h1>
+  <p class="lede">Grouped clusters — stay on one surface per cluster, switch only at cluster boundaries.</p>
+  <div class="meta">
+    Helix app: <a href="https://helix-bank-ld-homework.vercel.app">helix-bank-ld-homework.vercel.app</a>
+    · Operator console: <a href="https://helix-bank-ld-homework.vercel.app/demo/strategist">/demo/strategist</a>
+    · LaunchDarkly Console: <a href="https://app.launchdarkly.com">app.launchdarkly.com</a>
+  </div>
+</header>
+
+<div class="legend">
+  <div class="key"><span class="swatch helix"></span> Helix app (customer or operator)</div>
+  <div class="key"><span class="swatch ld"></span> LaunchDarkly Console</div>
+</div>
+
+<!-- ─────────────────────────── BLOCK 1 ─────────────────────────── -->
+
+<div class="block-header">
+  <h2>Block 1 — Discovery recap</h2>
+  <span class="timing">0:00 – 0:15  ·  15 min</span>
+</div>
+
+<ul class="conv-list">
+  <li><strong>Open:</strong> "Before I show you anything, I want to play back what I heard last time, in your words."</li>
+  <li><strong>Quote Priya's pains:</strong> 21 perks × 3 tiers, 2 A/Bs in six months, 30-min rollbacks via code release.</li>
+  <li><strong>Quote James's pains:</strong> near-miss Ultra-to-bereaved-customer; 5-day manual variant review = throughput cap.</li>
+  <li><strong>Business initiative:</strong> 40% Premium MAU YoY without Consumer Duty breaches; embedded by H2 2026.</li>
+  <li><strong>Underlying tension:</strong> compliance isn't slow because they're bad — manual review is their only defence.</li>
+  <li><strong>Lock the four success criteria:</strong> compliance review &lt;24h · rollback &lt;2min · &gt;4 experiments/qtr · vulnerable-customer protection auditable.</li>
+  <li><strong>Confirmation:</strong> "Did I miss anything? If yes, tell me now so I can hit it in the demo."</li>
+</ul>
+
+<!-- ─────────────────────────── BLOCK 2 ─────────────────────────── -->
+
+<div class="block-header">
+  <h2>Block 2 — Live demo</h2>
+  <span class="timing">0:15 – 0:30  ·  15 min</span>
+</div>
+
+<!-- ─────── CLUSTER A: CUSTOMER EXPERIENCE ─────── -->
+
+<div class="cluster">
+  <div class="cluster-head">
+    <h3 class="cluster-title">Cluster A — Customer experience</h3>
+    <span class="cluster-timing">~5 min</span>
+  </div>
+  <p class="cluster-purpose">Walk the customer surface. Switch personas. Then surface the LD governance behind it.</p>
+
+  <div class="phase helix">
+    <div class="phase-head">
+      <span class="phase-tag">Helix</span>
+      <span class="phase-where"><code>helix-bank-ld-homework.vercel.app</code></span>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">A1</span>
+        <div class="step-target">Open page as Matt (default persona). Walk the four tier cards.</div>
+      </div>
+      <ol>
+        <li>UK neobank, four tiers: Basic free → Ultra £24.99/mo.</li>
+        <li>Hero anchors on the user's triggering need: <strong>"Raise your monthly ATM withdrawal limit."</strong></li>
+        <li>21-perk library across the four tiers — too big for human exploration. That's what we're solving.</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">A2</span>
+        <div class="step-target">Header pill switcher → click <code>Sam · Low-income flag</code>.</div>
+      </div>
+      <ol>
+        <li>Three changes <strong>without a refresh</strong>: amber Consumer Duty banner, Ultra disappears, "Most popular" pill suppressed, CTAs soften to "Learn more."</li>
+        <li>Same surface. Different customer. Different experience — enforced by LaunchDarkly, not branching code.</li>
+        <li>Defense in depth at three layers. Let me show you each.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="phase ld">
+    <div class="phase-head">
+      <span class="phase-tag">LD Console</span>
+      <span class="phase-where"><code>app.launchdarkly.com</code></span>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">A3</span>
+        <div class="step-target">Flags → <code>release-incentives-v2</code> → Targeting + History tabs.</div>
+      </div>
+      <ol>
+        <li>Boolean release flag — gates the v2 perk surface vs the v1 ATM-only fallback.</li>
+        <li>History tab: every toggle captured with <strong>operator + timestamp</strong>. Compliance's audit trail by default.</li>
+        <li>Rollback is one toggle. ~200ms across every connected client.</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">A4</span>
+        <div class="step-target">Flags → <code>targeting-vulnerable-customer-mode</code> → Targeting tab.</div>
+      </div>
+      <ol>
+        <li>One rule: <code>vulnerabilityFlags ∋ [low-income, financial-hardship, recently-bereaved, health-related]</code>.</li>
+        <li>James — your compliance team owns this rule. If FG21/1 guidance changes, the rule changes here, not in code.</li>
+        <li>Same rule reusable across flags via segments. Define once, enforce everywhere.</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">A5</span>
+        <div class="step-target">Toggle <code>release-incentives-v2</code> OFF, glance at Helix tab, toggle back ON.</div>
+      </div>
+      <ol>
+        <li>Customer surface reverts to legacy ATM-only cards in &lt;200ms across every client.</li>
+        <li>This is the £5M-fine response: compliance flags an issue → one toggle → mitigation before the engineer opens their laptop.</li>
+        <li>Toggle back ON. Rehearsed in 5 seconds.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── CLUSTER B: OPERATOR + AI ─────── -->
+
+<div class="cluster">
+  <div class="cluster-head">
+    <h3 class="cluster-title">Cluster B — Operator workflow + AI governance</h3>
+    <span class="cluster-timing">~8 min</span>
+  </div>
+  <p class="cluster-purpose">Run the operator's full Generate → Apply loop. Then show the LD governance underneath.</p>
+
+  <div class="phase helix">
+    <div class="phase-head">
+      <span class="phase-tag">Helix</span>
+      <span class="phase-where"><code>/demo/strategist</code></span>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">B1</span>
+        <div class="step-target">Switch persona back to Matt → open <code>/demo/strategist</code>.</div>
+      </div>
+      <ol>
+        <li>Operator console — Priya's team uses this, not LaunchDarkly directly. Product surface over a platform.</li>
+        <li>Left pane: currently-applied allocation across all 3 tiers. Right pane: empty, waiting for AI proposal.</li>
+        <li>Available Perks library at the bottom — 21 perks grouped by cost band, each with projected conversion lift. This is what the AI sees.</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">B2</span>
+        <div class="step-target">Click <code>Generate proposal</code>. Wait ~2.5s.</div>
+      </div>
+      <ol>
+        <li>Real call to <strong>Claude Haiku 4.5</strong> via the LaunchDarkly AI Config.</li>
+        <li>Right pane fills. Diff badges: <span style="color: var(--emerald);">+ NEW</span> emerald, <span style="color: var(--rose);">− DROPPED</span> rose with strikethrough.</li>
+        <li>Metadata strip: which variation served this, model, response time, <strong>LIVE LLM</strong> chip (vs stub).</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">B3</span>
+        <div class="step-target">Click <code>Apply this proposal</code>.</div>
+      </div>
+      <ol>
+        <li>Apply writes to LaunchDarkly via REST PATCH on the <code>applied-perk-allocation</code> flag.</li>
+        <li>Left pane mirrors immediately. Emerald pulse confirms the apply landed.</li>
+        <li>Audit trail captured automatically: operator (service token), timestamp, old value, new value.</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">B4</span>
+        <div class="step-target">Switch to the <code>/</code> tab (customer surface). Focus event triggers a refetch.</div>
+      </div>
+      <ol>
+        <li>All three tiers reflect the new allocation Claude proposed.</li>
+        <li>No refresh, no deploy, no code change. Every connected customer just saw the same update.</li>
+        <li>Notice the non-obvious choices Claude made — <code>isa-bonus-rate</code> in Premium, for instance. Defensible: 58% activation, +26% conversion lift. <strong>AI making a real product decision.</strong></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="phase ld">
+    <div class="phase-head">
+      <span class="phase-tag">LD Console</span>
+      <span class="phase-where"><code>app.launchdarkly.com</code></span>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">B5</span>
+        <div class="step-target">AI Configs → <code>perk-allocation-strategist</code> → Variations tab.</div>
+      </div>
+      <ol>
+        <li>Three variations, one config: <strong>Claude Revenue Optimiser (50%)</strong>, <strong>Claude Retention Optimiser (50%)</strong>, <strong>GPT-4o-mini Balanced (0%)</strong>.</li>
+        <li>Each variation: distinct system prompt, same JSON output schema. Prompt engineering is a Console concern, not a code release.</li>
+        <li>Allocation governed in LaunchDarkly. Raise the GPT slot from 0% mid-experiment — no code change, full audit trail.</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">B6</span>
+        <div class="step-target">Flags → <code>applied-perk-allocation</code> → History tab.</div>
+      </div>
+      <ol>
+        <li>Every Apply logged. Operator + timestamp + previous value + new value, replayable forever.</li>
+        <li>Two variations: <code>current</code> (variation 0 — what we just PATCHed) and <code>minimum-safe</code> (variation 1 — the compliance-floor rollback target, 1/2/3 perks per tier).</li>
+        <li>Flag-off serves <code>minimum-safe</code> instantly. Regulatory emergency response — flip one toggle, every customer reverts to the absolute-safe baseline.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── CLUSTER C: OPTIONAL CROSS-PROVIDER ─────── -->
+
+<div class="cluster optional">
+  <div class="cluster-head">
+    <h3 class="cluster-title">Cluster C — Cross-provider raise</h3>
+    <span class="cluster-timing">~2 min · if time + James engaged</span>
+  </div>
+  <p class="cluster-purpose">Vendor flexibility made operational. Skip if running long or audience hasn't asked about model-vendor risk.</p>
+
+  <div class="phase ld">
+    <div class="phase-head">
+      <span class="phase-tag">LD Console</span>
+      <span class="phase-where"><code>app.launchdarkly.com</code></span>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">C1</span>
+        <div class="step-target">AI Configs → <code>perk-allocation-strategist</code> → raise <code>GPT-4o-mini Balanced</code> from 0% to 33%.</div>
+      </div>
+      <ol>
+        <li>One slider. Audit trail captures who changed the allocation and when.</li>
+        <li>No code change. No deploy. No CISO sign-off needed beyond the AI Config governance you already have.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="phase helix">
+    <div class="phase-head">
+      <span class="phase-tag">Helix</span>
+      <span class="phase-where"><code>/demo/strategist</code></span>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">C2</span>
+        <div class="step-target">Click <code>Generate proposal</code> again.</div>
+      </div>
+      <ol>
+        <li>Same prompt, different model. OpenAI now serves a portion of traffic.</li>
+        <li>"Vendor-locked" is now an operational story, not a slide.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────── BLOCK 3 ─────────────────────────── -->
+
+<div class="block-header">
+  <h2>Block 3 — Objection &amp; close</h2>
+  <span class="timing">0:30 – 0:45  ·  15 min</span>
+</div>
+
+<ul class="conv-list">
+  <li><strong>Curveball 1 — "We tried flags 3 years ago":</strong> probe the original use case, point at AI Configs as the post-3-years-ago expansion.</li>
+  <li><strong>Curveball 2 — "Buy vs build":</strong> 3 things they'd build from scratch (audit-trail-with-replay, sub-100ms streaming, AI governance) = 2-3 quarters of engineering vs a week to deploy.</li>
+  <li><strong>Curveball 3 — "Optimizely already does this":</strong> Optimizely is strong at marketing experimentation, not regulatory exclusion or LLM governance.</li>
+  <li><strong>Curveball 4 — Commercial pushback:</strong> reframe on risk-cost — one Consumer Duty fine = £5M–£50M; LD spend is a fraction.</li>
+  <li><strong>Curveball 5 — "Priority shift":</strong> Consumer Duty is already in force; propose a 30-day POC on one surface only.</li>
+  <li><strong>Close — Specific next step:</strong> 30-day POC, Premium upgrade flow only, your test env, Priya + 1 engineer ↔ me + solutions engineer.</li>
+  <li><strong>Close — Mutual exit ramp:</strong> if the POC doesn't move the 4 success criteria, we walk away — no commercial expectation.</li>
+  <li><strong>Close — Calendar move:</strong> book the scoping session on the call. Tuesday–Thursday, 60 min.</li>
+</ul>
+
+</div>
+</body>
+</html>
