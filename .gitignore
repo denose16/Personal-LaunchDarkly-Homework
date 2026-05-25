@@ -1,0 +1,44 @@
+# macOS noise
+.DS_Store
+
+# Next.js build artefacts (inside app/)
+app/node_modules/
+app/.next/
+app/out/
+app/build/
+app/.vercel/
+app/.pnp
+app/.pnp.*
+app/.yarn/*
+
+# Env / secrets — never commit
+app/.env
+app/.env.local
+app/.env.development
+app/.env.production
+.env
+.env.local
+
+# TypeScript build info
+app/*.tsbuildinfo
+app/next-env.d.ts
+
+# Logs
+app/npm-debug.log*
+app/yarn-debug.log*
+app/yarn-error.log*
+app/.pnpm-debug.log*
+
+# Coverage
+app/coverage/
+
+# Internal agent / project artefacts — not for the public repo
+HANDOVER.md
+LAUNCHDARKLY_ONBOARDING.md
+.mcp.json
+
+# LaunchDarkly's brief — their IP, can't redistribute publicly
+SE_Homework_V4_0.pdf
+
+# Local screenshots scratch (move finalised screenshots to docs/screenshots/ to commit)
+*.png.bak
