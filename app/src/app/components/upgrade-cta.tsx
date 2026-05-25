@@ -6,15 +6,19 @@ import type { Tier } from "@/lib/incentives";
 
 type Props = {
   tier: Tier;
-  /**
-   * When true, replaces the active CTA with a softer "Learn more" link
-   * (set by the parent when targeting-vulnerable-customer-mode is true).
-   */
   soften?: boolean;
-  /** Whether the user has already upgraded this tier (parent-owned state). */
   upgraded: boolean;
-  /** Called after the tier-upgrade event has fired, before parent re-renders. */
   onUpgrade: () => void;
+};
+
+// Per-tier button colour matches the tier's design theme (see tier-card.tsx
+// TIER_THEMES). Rose for Premium, cyan for Pro, amber for Ultra.
+const UPGRADE_BUTTON_CLASS: Record<Exclude<Tier, "basic">, string> = {
+  premium:
+    "bg-rose-500 hover:bg-rose-400 focus-visible:outline-rose-300 text-white",
+  pro: "bg-cyan-500 hover:bg-cyan-400 focus-visible:outline-cyan-300 text-white",
+  ultra:
+    "bg-amber-500 hover:bg-amber-400 focus-visible:outline-amber-300 text-zinc-950",
 };
 
 export default function UpgradeCta({
@@ -44,7 +48,7 @@ export default function UpgradeCta({
         disabled
         className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200"
       >
-        ✓ Upgraded — activate your perks below
+        ✓ Upgraded to {label} — perks active
       </button>
     );
   }
@@ -54,11 +58,14 @@ export default function UpgradeCta({
     onUpgrade();
   };
 
+  const colourClass =
+    tier === "basic" ? "" : UPGRADE_BUTTON_CLASS[tier];
+
   return (
     <button
       type="button"
       onClick={handleClick}
-      className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"
+      className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition ${colourClass}`}
     >
       Upgrade to {label}
     </button>
