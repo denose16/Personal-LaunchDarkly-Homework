@@ -1,6 +1,8 @@
 # Helix Bank · LaunchDarkly SE Technical Homework
 
-**Live demo:** *(deployed to Vercel — link goes here once Phase 9 lands)*
+**Live demo:** [helix-bank-ld-homework.vercel.app](https://helix-bank-ld-homework.vercel.app)
+**Operator console:** [/demo/strategist](https://helix-bank-ld-homework.vercel.app/demo/strategist)
+**Repo:** [github.com/denose16/Personal-LaunchDarkly-Homework](https://github.com/denose16/Personal-LaunchDarkly-Homework)
 **LD project:** `default` on the LaunchDarkly trial environment
 **Scenario:** Helix, a fictional UK neobank, runs LaunchDarkly's Release + Iterate capabilities as **the compliance-supportive substrate for regulated subscription incentives**.
 
