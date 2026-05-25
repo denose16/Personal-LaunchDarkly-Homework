@@ -5,6 +5,121 @@ Every meaningful step is logged here. Entries include: what changed, why, and (w
 
 ---
 
+## 2026-05-25 — Deliverables 2 + 3 written: Decision Log + Playback notes shipped
+
+### Entry 26 — Decision Log + Playback notes both live in the repo
+
+- **User prompts (verbatim, in order)**:
+  > "continue with the decision log"
+  > "I'll take care of sharing with the hiring manager. You start to prep playback"
+
+#### Decision Log (`docs/DECISION_LOG.md`)
+
+Hits the brief's five required sections in ~1.5 printed pages, in Matt's voice (terse, specific, honest):
+
+1. **Three design decisions + trade-offs**:
+   - AI Configs governs *product structure*, not marketing copy (mid-build sharpening from generic `ai-config-offer-copy` → `perk-allocation-strategist`)
+   - Applied allocation wins over the experiment override on Premium (reversal of original BUILD_PLAN's layered design — caught by Matt himself when Apply appeared broken)
+   - Vulnerable customers see the in-code baseline, not the LD flag value (three layers of defense in depth)
+2. **One AI suggestion overridden**: `LDProvider` doesn't auto-`identify()` on context prop changes. AI's pattern-matched fix would have shipped silently broken. Verified by reading the compiled SDK source at `node_modules/launchdarkly-react-client-sdk/lib/esm/index.js`. Fix was the explicit `<LDClientSync>` component.
+3. **Startup vs regulated bank**: contrast table covering applied-state persistence, validation-failure handling, vulnerable-customer protection, rollback strategy. Closing punchline: "selling LD into a startup leads with velocity; selling into a regulated bank leads with governance."
+4. **Biggest production risk**: schema validation is necessary but not sufficient. Validator accepts structurally-valid-but-business-incorrect AI outputs. Honourable mention: prompt injection via the engagement-data pipeline.
+5. **What I'd build next (4h)**: Evaluations + Datasets harness, per-evaluation immutable audit log, vulnerable-customer-specific AI variation. Plus "what I'd NOT build and why" — auth layer, performance work, more LD primitives for completeness.
+
+Plus a final section pointing at `CHANGELOG.md` as the prompt log (25 dated entries, every verbatim user prompt captured).
+
+#### Playback notes (`docs/PLAYBACK.md`)
+
+15+15+15 structure per the brief. ~2500 words, organised for rehearsal:
+
+- **Named personas**: Priya Mehta (Champion / VP Product), James Whitaker (EB / Chief Risk & Compliance Officer), Matt + Sam (end users — already live in the build)
+- **Block 1 (Discovery, 15m)**: pain in customer's words (not LD product language), business initiative (40% Premium MAU YoY without Consumer Duty breaches), four success criteria
+- **Block 2 (Solution & value, 15m)**: capability→outcome table (the "one-slide if I'm asked" version), 5 live demo moments in order with talking points, optional 6th cross-provider-raise moment if time permits
+- **Block 3 (Objections & close, 15m)**: 5 pre-rehearsed curveballs (release-flag-fatigue, buy-vs-build, Optimizely overlap, commercial pushback, priority shift) with prepared responses, three-component close (specific next step, mutual exit ramp via 30-day POC + walk-away clause, calendar move on the call)
+- **Coaching notes**: pace, what-to-cut-if-long, voice ("play back THEIR words, not LD product names"), the most-likely-hard-question playbook, three-item post-meeting follow-up sequence
+
+#### Push hiccup worth noting
+
+`git push` returned 403 (denied to `YellowRock-46`) even though `gh auth status` showed `denose16` as active for the previous deploy. Root cause: each new Bash shell session resets the `gh` active-account state — `gh auth switch --user denose16` from an earlier session doesn't persist. Fix: chain `gh auth switch --user denose16 && gh auth setup-git && git push` in a single shell invocation. Worth a future workflow note for any multi-account gh use.
+
+#### Status against GOAL.md Definition of Done
+
+| # | Criterion | Status |
+|---|---|---|
+| 1 | Build deployed + repo public + hiring manager has LD access | ✅ deploy + repo; ⏳ hiring manager (user handling) |
+| 2 | Decision log written, in Matt's voice | ✅ `docs/DECISION_LOG.md` |
+| 3 | Playback deck/notes rehearsed and timed to 45 min | ✅ notes; rehearsal is user's |
+| 4 | Every checkbox in GOAL.md ticked | ⏳ depends on screenshots + hiring manager |
+| 5 | `/Personal/LaunchDarkly/` contains every artefact | ✅ |
+| 6 | `CHANGELOG.md` up to date through final submission | ✅ (this entry) |
+
+The 4 remaining items are all in the user's court: hiring manager invite, 8 Console screenshots, 2 smoke-test variations to delete, and rehearsing the playback.
+
+---
+
+## 2026-05-25 — Phase 9 SHIPPED: live at helix-bank-ld-homework.vercel.app
+
+### Entry 25 — README + GitHub push + Vercel deploy
+
+- **User prompt (verbatim)**:
+  > "works now, let's keep going" → chose "README first, then deploy (1 → 2 → 3)"
+
+#### Housekeeping (Task #23, done)
+- `BUILD_PLAN.md` §3.3 + §8 updated to reflect Entry 24's reversal (applied wins over experiment on Premium)
+- Console-cleanup of the 2 dead-weight smoke-test variations surfaced to the user as a manual 30-second LD Console step (MCP delete-variation still 500s, won't fix that here)
+
+#### README (Task #24, done)
+- Wrote `README.md` at project root (~250 lines) — what the hiring panel reads first
+- Structure: live demo links → demo moments → 4 LD artefacts at a glance → render priority decision → local setup → architecture (file structure + LLM invocation flow + apply flow) → screenshots placeholder section → decision-log pointer → what I'd build next → FCA Consumer Duty framing
+- Created `.env.example` at project root documenting all 4 env vars (NEXT_PUBLIC_LD_CLIENT_SIDE_ID, LD_SDK_KEY, ANTHROPIC_API_KEY, LAUNCHDARKLY_API_TOKEN) with sourcing instructions
+- Created `.gitignore` at project root — keeps `app/.env.local`, `SE_Homework_V4_0.pdf` (LD's IP), `HANDOVER.md` (internal), `LAUNCHDARKLY_ONBOARDING.md` (internal), `.mcp.json` out of the public repo; lets `README.md`, `GOAL.md`, `BUILD_PLAN.md`, `CHANGELOG.md` through
+- `app/README.md` replaced with a stub pointing to the project-root README
+
+#### GitHub push + Vercel deploy (Task #25, done)
+
+Pre-flight:
+- `gh auth switch --user denose16` (was YellowRock-46)
+- Unset stale `VERCEL_TOKEN` env var (was overriding stored mattgroom-5641 session); confirmed `vercel whoami` returns `mattgroom-5641` (the OLD account per memory rule)
+- Mirrored `git config user.name` + `user.email` from the Prism repo (`denose16` + `36445845+denose16@users.noreply.github.com`)
+
+Steps executed:
+1. `git init` at project root
+2. `git add -A` + verified via `git check-ignore -v` that all 5 sensitive files are properly gitignored
+3. Initial commit with full Helix scenario description
+4. `gh repo create Personal-LaunchDarkly-Homework --public --source=. --push` — created PUBLIC repo on denose16 from day 1 per BUILD_PLAN
+5. `cd app && vercel link --yes --project helix-bank-ld-homework` — linked to OLD account (mattgroom-5641s-projects)
+6. Added all 4 env vars × 2 environments (Production + Development) via stdin-piped `vercel env add` — 8 entries confirmed via `vercel env ls`
+7. `vercel deploy --prod --yes` — production deploy succeeded in ~35s
+
+URLs:
+- **Live demo**: https://helix-bank-ld-homework.vercel.app
+- **Operator console**: https://helix-bank-ld-homework.vercel.app/demo/strategist
+- **Public repo**: https://github.com/denose16/Personal-LaunchDarkly-Homework
+
+Smoke test (live URL):
+- `/` HTTP 200, ATM-limit hero present ✓
+- `/demo/strategist` HTTP 200, strategist title present ✓
+- `/api/perk-allocation/apply` HTTP 200, **`persistence: ld-flag`** — confirms LD writer token works in production ✓
+
+README updated with live URLs + committed + pushed.
+
+#### What this unlocks
+
+GOAL.md success criteria 1, 2 from Deliverable 1 are now ticked:
+- ✅ Working React app deployed to a public URL
+- ✅ Public GitHub repo with clear README
+- ❌ Hiring manager added as a member of the LD project (still pending — needs their email)
+
+#### Remaining work to submission
+
+1. Hiring manager added to LD project (~1 min once email is in hand)
+2. Console-delete the 2 smoke-test AI Config variations
+3. Take 8 Console screenshots + drop in `docs/screenshots/` + git push
+4. Decision Log distillation (one-page form, the 5 brief questions) — ~45 min
+5. Playback notes — 15+15+15, named personas, curveballs — ~60 min
+
+---
+
 ## 2026-05-25 — Applied allocation wins over experiment override (architectural change)
 
 ### Entry 24 — Architectural overlap diagnosed: experiment-premium-bundle was overriding applied-perk-allocation on Premium
