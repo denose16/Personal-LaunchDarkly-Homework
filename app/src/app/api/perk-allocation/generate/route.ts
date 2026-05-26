@@ -29,6 +29,22 @@ export async function POST(request: Request) {
     );
   }
 
+  if (
+    body.forceStrategy !== undefined &&
+    body.forceStrategy !== "revenue" &&
+    body.forceStrategy !== "retention" &&
+    body.forceStrategy !== "balanced"
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        reason: "invalid-force-strategy",
+        details: "forceStrategy must be 'revenue', 'retention', or 'balanced'",
+      },
+      { status: 400 }
+    );
+  }
+
   try {
     const result = await generateProposal(body);
     if (!result.ok) {

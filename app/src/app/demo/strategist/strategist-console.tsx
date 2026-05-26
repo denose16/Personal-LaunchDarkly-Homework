@@ -62,8 +62,11 @@ const EMPTY: Allocation = { premium: [], pro: [], ultra: [] };
 
 const APPLY_CUE_MS = 3500; // duration of the post-apply emerald pulse on the left pane
 
+type ForceStrategy = "auto" | "revenue" | "retention" | "balanced";
+
 export default function StrategistConsole() {
   const [identity, setIdentity] = useState<"default" | "vulnerable">("default");
+  const [forceStrategy, setForceStrategy] = useState<ForceStrategy>("auto");
   const [current, setCurrent] = useState<Allocation>(BASELINE);
   const [proposal, setProposal] = useState<Allocation | null>(null);
   const [meta, setMeta] = useState<{
@@ -127,7 +130,10 @@ export default function StrategistConsole() {
       const res = await fetch("/api/perk-allocation/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ identity }),
+        body: JSON.stringify({
+          identity,
+          ...(forceStrategy !== "auto" && { forceStrategy }),
+        }),
       });
       const data = (await res.json()) as GenerateResponse;
       if (!data.ok) {
@@ -153,7 +159,7 @@ export default function StrategistConsole() {
     } finally {
       setLoading(false);
     }
-  }, [identity]);
+  }, [identity, forceStrategy]);
 
   const handleApply = useCallback(async () => {
     if (!proposal || !meta) return;
@@ -249,6 +255,32 @@ export default function StrategistConsole() {
               }
             >
               {opt === "default" ? "Matt · default" : "Sam · vulnerable"}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-zinc-500">Strategy:</span>
+          {(["auto", "revenue", "retention", "balanced"] as const).map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setForceStrategy(opt)}
+              aria-pressed={forceStrategy === opt}
+              className={
+                forceStrategy === opt
+                  ? opt === "auto"
+                    ? "rounded-full bg-zinc-700 px-3 py-1 font-medium text-zinc-100"
+                    : "rounded-full bg-amber-500/20 px-3 py-1 font-medium text-amber-200"
+                  : "rounded-full px-3 py-1 text-zinc-400 hover:text-zinc-200"
+              }
+              title={
+                opt === "auto"
+                  ? "Let LaunchDarkly's variation bucketing decide"
+                  : `Force the ${opt} variation regardless of LD bucketing`
+              }
+            >
+              {opt === "auto" ? "Auto (LD bucket)" : opt.charAt(0).toUpperCase() + opt.slice(1)}
             </button>
           ))}
         </div>

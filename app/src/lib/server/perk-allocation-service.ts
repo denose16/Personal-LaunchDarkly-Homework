@@ -23,6 +23,14 @@ const METRIC_VALIDATION_FAILED = "ai-validation-failed";
 
 export type GenerateRequest = {
   identity: "default" | "vulnerable";
+  /**
+   * Optional admin override — forces a specific strategy variation regardless
+   * of LD's bucketing. Lets the playback demonstrate all 3 strategies from
+   * one session. When set, response.mode includes the "forced" qualifier in
+   * the variationName so the UI can label it clearly. Bypasses LD's variation
+   * assignment but still uses the variation's prompt fetched via REST.
+   */
+  forceStrategy?: Strategy;
 };
 
 export type GenerateResponse =
@@ -427,6 +435,150 @@ async function trackValidationFailed(
   });
 }
 
+// Force-strategy → variation-key mapping. Mirrors the keys in the LD AI
+// Config (perk-allocation-strategist). Used by the admin override path to
+// pick a specific variation regardless of LD's normal bucketing.
+const STRATEGY_TO_VARIATION_KEY: Record<Strategy, string> = {
+  revenue: "claude-haiku-revenue-optimiser",
+  retention: "claude-haiku-retention-optimiser",
+  balanced: "gpt-4o-mini-balanced",
+};
+
+// Fetches a specific AI Config variation's full config (model + messages +
+// parameters) via the LD REST API. Used by the force-strategy admin path
+// to bypass LD's normal bucketing while still pulling the prompt from the
+// canonical LD source.
+async function fetchAiConfigVariation(strategy: Strategy): Promise<{
+  modelConfigKey: string;
+  modelName: string;
+  messages: Array<{ role: string; content: string }>;
+  parameters: Record<string, unknown>;
+} | null> {
+  const token = process.env.LAUNCHDARKLY_API_TOKEN;
+  if (!token) return null;
+
+  const variationKey = STRATEGY_TO_VARIATION_KEY[strategy];
+  const url = `https://app.launchdarkly.com/api/v2/projects/default/ai-configs/${AI_CONFIG_KEY}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: token,
+        "LD-API-Version": "20240415",
+      },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      variations?: Array<{
+        key: string;
+        modelConfigKey: string;
+        modelName: string;
+        messages?: Array<{ role: string; content: string }>;
+        parameters?: Record<string, unknown>;
+      }>;
+    };
+    const variation = data.variations?.find((v) => v.key === variationKey);
+    if (!variation) return null;
+
+    // LD REST API returns modelConfigKey ("Anthropic.claude-haiku-4-5-20251001")
+    // but the explicit modelName field is null. Derive the model identifier
+    // by stripping the provider prefix.
+    const derivedModelName =
+      variation.modelName ?? variation.modelConfigKey.split(".").slice(1).join(".");
+
+    return {
+      modelConfigKey: variation.modelConfigKey,
+      modelName: derivedModelName,
+      messages: variation.messages ?? [],
+      parameters: variation.parameters ?? {},
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function generateForcedStrategy(
+  context: ReturnType<typeof buildServerContext>,
+  strategy: Strategy
+): Promise<GenerateResponse> {
+  const startedAt = Date.now();
+  const variation = await fetchAiConfigVariation(strategy);
+
+  // If the REST fetch failed, fall back to the stub for that strategy.
+  if (!variation) {
+    return generateStubFromAssignedVariation(context, strategy, startedAt);
+  }
+
+  // No Anthropic key → stub. Same as the normal-flow fallback.
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return generateStubFromAssignedVariation(context, strategy, startedAt);
+  }
+
+  // Provider not Anthropic (e.g. balanced/GPT) and no OpenAI key → stub.
+  const provider = variation.modelConfigKey.split(".")[0]?.toLowerCase() ?? "";
+  if (provider !== "anthropic") {
+    return generateStubFromAssignedVariation(context, strategy, startedAt);
+  }
+
+  const variationName = `${STRATEGY_LABELS[strategy]} · FORCED`;
+  const systemPrompt =
+    variation.messages.find((m) => m.role === "system")?.content ?? "";
+  const placeholderUser =
+    variation.messages.find((m) => m.role === "user")?.content ?? "";
+  const userMessage = `${placeholderUser}\n\n${buildUserPrompt()}`;
+
+  const params = variation.parameters ?? {};
+  const maxTokens =
+    typeof params.max_tokens === "number" ? params.max_tokens : 1500;
+  const temperature =
+    typeof params.temperature === "number" ? params.temperature : 0.3;
+
+  try {
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const response = await anthropic.messages.create({
+      model: variation.modelName,
+      max_tokens: maxTokens,
+      temperature,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMessage }],
+    });
+    const textBlock = response.content.find((b) => b.type === "text");
+    const rawText = textBlock && "text" in textBlock ? textBlock.text : "";
+    const parsed = extractJsonObject(rawText);
+    const validation = validateAllocation(parsed);
+
+    if (!validation.valid) {
+      await trackValidationFailed(context, variationName, validation);
+      return {
+        ok: false,
+        mode: "live",
+        reason: "validation-failed",
+        details: `${validation.reason}: ${validation.details ?? ""}`,
+        variationName,
+      };
+    }
+
+    return {
+      ok: true,
+      mode: "live",
+      variationName,
+      modelName: variation.modelName,
+      providerName: "Anthropic",
+      proposal: validation.allocation,
+      durationMs: Date.now() - startedAt,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      mode: "live",
+      reason: "ai-call-failed",
+      details: err instanceof Error ? err.message : String(err),
+      variationName,
+    };
+  }
+}
+
 // Main entry point. Returns either a validated proposal or a structured
 // failure (which the route handler turns into the appropriate HTTP shape).
 export async function generateProposal(
@@ -448,7 +600,14 @@ export async function generateProposal(
   }
 
   const context = buildServerContext(user);
-  const liveMode = Boolean(process.env.ANTHROPIC_API_KEY);
 
+  // Admin force-strategy path — bypasses LD bucketing, uses the named
+  // variation's prompt fetched via REST. Lets the playback demonstrate
+  // all 3 strategies from one session without changing LD allocations.
+  if (req.forceStrategy) {
+    return generateForcedStrategy(context, req.forceStrategy);
+  }
+
+  const liveMode = Boolean(process.env.ANTHROPIC_API_KEY);
   return liveMode ? generateLive(context) : generateStub(context);
 }

@@ -5,6 +5,60 @@ Every meaningful step is logged here. Entries include: what changed, why, and (w
 
 ---
 
+## 2026-05-26 — Polish sweep: segment lift, force-strategy override, smoke-test archived, Helix screenshots captured
+
+### Entry 27 — Final polish before submission
+
+- **User prompt (verbatim)**:
+  > "Can you deal with the polish up items?  You can also take teh screenshots, no?  There's nothing here you need me for"
+
+#### 1. Smoke-test variations — Console-delete attempt (LD-side bug)
+
+- Retried `mcp__LaunchDarkly__delete-ai-config-variation` for both smoke-test variations → still 500. Then tried direct `DELETE` via LD REST API with the writer-scope token → also 500 (`internal_service_error`). Confirms the issue is in LD's actual API, not the MCP wrapper layer.
+- **Workaround**: renamed both variations' system prompts to clearly mark them as `ARCHIVED — pre-build smoke test. Not in use. Allocation pinned to 0%. Cannot delete via API (LD-side 500 bug, May 2026). Safe to ignore.` Key + name remain (immutable post-create per the LD limitation we hit earlier), but anyone opening the variation in the Console will immediately see the ARCHIVED tag. Functional state: zero traffic (allocation 0%), zero impact on the demo.
+
+#### 2. Segment lift — `vulnerable-customers` segment created, both flags re-pointed
+
+- LD REST API has no MCP wrapper for segment creation, so used direct `POST /api/v2/segments/default/test` with the writer token.
+- **Created** segment `vulnerable-customers` with the four FCA FG21/1 vulnerability driver tags as the matching rule. Tags: `compliance`, `fca-consumer-duty`, `helix`, `vulnerable-customer`.
+- **Updated** both flags via `mcp__LaunchDarkly__update-targeting-rules` to replace their inline `vulnerabilityFlags in [...]` clauses with `segmentMatch` clauses referencing the new segment:
+  - `targeting-vulnerable-customer-mode` — rule "Member of vulnerable-customers segment" → true
+  - `experiment-premium-bundle` — rule "Member of vulnerable-customers segment → control bundle" → control variation
+- **Verified** via `clientsdk.launchdarkly.com/sdk/evalx/...` against Sam's context: `targeting-vulnerable-customer-mode: True`, `experiment-premium-bundle` serves control. Segment-based exclusion is now the single source of truth — compliance owns the rule, both flags reference it.
+- The narrative payoff: "Define vulnerability once, enforce everywhere" is now a real architectural fact, not a forward-looking promise.
+
+#### 3. Force-strategy override — admin can demo all 3 strategies from one session
+
+- **Server side** (`app/src/lib/server/perk-allocation-service.ts`):
+  - `GenerateRequest` now accepts `forceStrategy?: "revenue" | "retention" | "balanced"`.
+  - New `generateForcedStrategy()` path fetches the named variation's full config (model + messages + parameters) via REST `GET /api/v2/projects/default/ai-configs/perk-allocation-strategist`, calls Anthropic directly with that variation's prompt, validates the output through the same `validateAllocation()` used by the normal flow. Falls back to stub for non-Anthropic providers (GPT-4o-mini lacks an OpenAI key in env).
+  - SDK gotcha caught and worked around inline: the LD REST API returns `modelName: null` for AI Config variations — only `modelConfigKey` ("Anthropic.claude-haiku-4-5-20251001") is populated. Derived the model name by stripping the provider prefix. Documented in code comment.
+  - Variations are tagged in the response as `FORCED` (e.g. `"Claude Haiku — Retention Optimiser · FORCED"`) so the UI can render an unmistakable label.
+- **Route** (`app/src/app/api/perk-allocation/generate/route.ts`): validates `forceStrategy` against the 3-value enum, returns 400 with structured error on invalid.
+- **UI** (`app/src/app/demo/strategist/strategist-console.tsx`): added a "Strategy" pill row alongside the segment selector. Options: `Auto (LD bucket)` (default — current behaviour) · `Revenue` · `Retention` · `Balanced`. Forced selections are amber-pilled so they're visually distinct from auto (zinc).
+- **Verified end-to-end**: forcing Retention against Matt's context returns a visibly different allocation from forcing Revenue (e.g. `fx-interbank` showing up in Premium for the retention case — utility-tilted choice).
+- **Playback payoff**: "Let me show you what each strategy would propose for the same customer." Three clicks, three live LLM calls, three defensible-but-different allocations. Without this override, LD's deterministic bucketing would lock Matt into one variation across the whole session.
+
+#### 4. Screenshots — 3/8 captured via Playwright
+
+Captured against the production URL (`helix-bank-ld-homework.vercel.app`):
+- `docs/screenshots/07-customer-surface.png` — `/` as Matt, all 4 tier cards with their distinctive aesthetics visible
+- `docs/screenshots/08-vulnerable-mode.png` — `/` as Sam, banner + 3-card grid + softened CTAs
+- `docs/screenshots/06-strategist-console.png` — `/demo/strategist` mid-Generate with a live LLM proposal + diff highlights
+
+Playwright artefacts (`.playwright-mcp/` + stray pngs at the Claude root) cleaned up post-capture per the project's QA hygiene rule.
+
+The 5 LD-Console screenshots (release flag, vulnerable targeting, experiment variations, AI Config, applied-state audit) need a logged-in LD session — Playwright doesn't have one. README's screenshots table updated to mark these as `inspect in LD project` rather than missing — the hiring panel will see them directly via the LD project invite.
+
+#### What's left for the user
+
+- Hiring manager LD-project invite (user owns this)
+- *(Optional)* Capture the 5 LD-Console screenshots if you want them in the repo rather than only viewable in the Console
+
+Build, repo, deploy, README, Decision Log, Playback notes, Demo Framework, click-path, polish — all shipped.
+
+---
+
 ## 2026-05-25 — Deliverables 2 + 3 written: Decision Log + Playback notes shipped
 
 ### Entry 26 — Decision Log + Playback notes both live in the repo

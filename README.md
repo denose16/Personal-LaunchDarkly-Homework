@@ -241,18 +241,18 @@ Tier cards re-render across every open tab
 
 ## Screenshots
 
-LD Console screenshots evidence the four primitives in action. *(Capture and drop into `docs/screenshots/` — the paths below are pre-wired.)*
+Three Helix-side captures live in `docs/screenshots/` (captured via Playwright against the production URL). The five LD-Console captures need a logged-in LD session — they're listed here for the hiring panel to inspect directly via the LD project they've been invited to.
 
-| File | What it shows |
-|---|---|
-| `docs/screenshots/01-release-flag.png` | `release-incentives-v2` flag overview — targeting rules + rollout + audit log of the live toggle test |
-| `docs/screenshots/02-vulnerable-targeting.png` | `targeting-vulnerable-customer-mode` rule — `vulnerabilityFlags ∋ {low-income, ...}` clause |
-| `docs/screenshots/03-experiment-variations.png` | `experiment-premium-bundle` — 4 audience-hypothesis variations with allocation |
-| `docs/screenshots/04-ai-config-variations.png` | `perk-allocation-strategist` AI Config — 3 variations (revenue, retention, GPT-balanced) with prompts |
-| `docs/screenshots/05-applied-state-audit.png` | `applied-perk-allocation` flag audit log — every operator Apply with timestamp + user |
-| `docs/screenshots/06-strategist-console.png` | `/demo/strategist` admin page with a live AI proposal and diff highlights |
-| `docs/screenshots/07-customer-surface.png` | `/` customer-facing tier comparison showing applied state |
-| `docs/screenshots/08-vulnerable-mode.png` | `/` with persona = Sam · vulnerable — Ultra hidden, banner shown, CTAs softened |
+| File | What it shows | Status |
+|---|---|---|
+| `docs/screenshots/06-strategist-console.png` | `/demo/strategist` operator console with a live Claude-Haiku-4.5 proposal + diff highlights | ✅ |
+| `docs/screenshots/07-customer-surface.png` | `/` customer-facing tier comparison (Matt persona, applied state) | ✅ |
+| `docs/screenshots/08-vulnerable-mode.png` | `/` with persona = Sam · vulnerable — Ultra hidden, banner shown, CTAs softened | ✅ |
+| `docs/screenshots/01-release-flag.png` | `release-incentives-v2` flag overview — targeting + rollout + audit log | inspect in LD project |
+| `docs/screenshots/02-vulnerable-targeting.png` | `targeting-vulnerable-customer-mode` rule referencing the `vulnerable-customers` segment | inspect in LD project |
+| `docs/screenshots/03-experiment-variations.png` | `experiment-premium-bundle` — 4 audience-hypothesis variations with allocation | inspect in LD project |
+| `docs/screenshots/04-ai-config-variations.png` | `perk-allocation-strategist` AI Config — 3 variations (revenue, retention, GPT-balanced) | inspect in LD project |
+| `docs/screenshots/05-applied-state-audit.png` | `applied-perk-allocation` flag audit log — every operator Apply with timestamp | inspect in LD project |
 
 ---
 
