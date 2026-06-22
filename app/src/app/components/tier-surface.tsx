@@ -138,9 +138,13 @@ export default function TierSurface() {
     ? TIERS_ORDERED.filter((t) => t !== "ultra")
     : TIERS_ORDERED;
 
+  // Container-query driven: single column through the whole ~1/3-screen demo
+  // range (container < @3xl), expanding to multi-column only when the app is
+  // shown at/near full width. Keys off the page <main>'s own width, so it
+  // reflows on resize regardless of viewport.
   const gridClass = vulnerableMode
-    ? "grid grid-cols-1 gap-4 sm:grid-cols-3"
-    : "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4";
+    ? "grid grid-cols-1 gap-4 @4xl:grid-cols-3"
+    : "grid grid-cols-1 gap-4 @3xl:grid-cols-2 @4xl:grid-cols-4";
 
   function perksForTier(tier: Tier): string[] | undefined {
     if (tier === "basic") return undefined;

@@ -115,7 +115,7 @@ export default function TierCard({
 
   return (
     <article
-      className={`relative p-6 ${theme.wrapperClass}`}
+      className={`relative p-5 @3xl:p-6 ${theme.wrapperClass}`}
       style={theme.wrapperStyle}
     >
       {isRecommended && (

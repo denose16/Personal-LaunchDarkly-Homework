@@ -238,9 +238,10 @@ export default function StrategistConsole() {
 
   return (
     <div className="space-y-6">
-      {/* Segment + actions row */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
-        <div className="flex items-center gap-2 text-xs">
+      {/* Segment + actions row — stacks into labelled rows in the narrow demo
+          column, goes inline only when shown at/near full width. */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 @3xl:flex-row @3xl:flex-wrap @3xl:items-center">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="text-zinc-500">Generate for segment:</span>
           {(["default", "vulnerable"] as const).map((opt) => (
             <button
@@ -259,7 +260,7 @@ export default function StrategistConsole() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="text-zinc-500">Strategy:</span>
           {(["auto", "revenue", "retention", "balanced"] as const).map((opt) => (
             <button
@@ -285,7 +286,7 @@ export default function StrategistConsole() {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 @3xl:ml-auto">
           <button
             type="button"
             onClick={handleGenerate}
@@ -338,8 +339,9 @@ export default function StrategistConsole() {
         </div>
       )}
 
-      {/* Split-pane */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Split-pane — proposal stacks under current in the narrow demo column,
+          side-by-side only at/near full width. */}
+      <div className="grid grid-cols-1 gap-4 @4xl:grid-cols-2">
         <div
           className={
             applyPulse
